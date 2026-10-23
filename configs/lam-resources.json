@@ -1,0 +1,125 @@
+{
+  "project": "LAM",
+  "recorded_on": "2026-10-23",
+  "upstream_repository": "https://github.com/aigc3d/LAM",
+  "upstream_commit": "339573649dd93df4cba8093a964e85a80d1b61f3",
+  "local_setup_commit": "1318ca7416d076ea95d9f65a9cdd35f72ab9fc8b",
+  "local_project_directory": "/home/wangzhikong666/projects/LAM",
+  "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "assets": [
+    {
+      "path": "exps/setup-5060/downloads/LAM_assets.tar",
+      "size": 297328640,
+      "source": "https://huggingface.co/3DAIGC/LAM-assets/resolve/284d3198e8a89cefba386ef83cb5f19034ff3910/LAM_assets.tar",
+      "sha256": "f8853a6678df2e08f4c27b3ed8ae625d29bc64500330b0bfebf45e64ff5af78f",
+      "published_sha256": "f8853a6678df2e08f4c27b3ed8ae625d29bc64500330b0bfebf45e64ff5af78f",
+      "etag": null
+    },
+    {
+      "path": "exps/setup-5060/downloads/thirdparty_models.tar",
+      "size": 969072640,
+      "source": "https://huggingface.co/3DAIGC/LAM-assets/resolve/284d3198e8a89cefba386ef83cb5f19034ff3910/thirdparty_models.tar",
+      "sha256": "2ac5eba7c1abca0ab6c682ad900ddb8819b713506043b04874599c82572931c8",
+      "published_sha256": "2ac5eba7c1abca0ab6c682ad900ddb8819b713506043b04874599c82572931c8",
+      "etag": null
+    },
+    {
+      "path": "model_zoo/lam_models/releases/lam/lam-20k/step_045500/model.safetensors",
+      "size": 2356556212,
+      "source": "https://huggingface.co/3DAIGC/LAM-20K/resolve/a710cd3c40c86ffe3fc572e895ed12f3ead47289/model.safetensors",
+      "sha256": "f527e6e78fd9743aad95cb15b221b864d8b6d356c1d174c0ffad5d74b9a95925",
+      "published_sha256": "f527e6e78fd9743aad95cb15b221b864d8b6d356c1d174c0ffad5d74b9a95925",
+      "etag": null
+    },
+    {
+      "path": "model_zoo/lam_models/releases/lam/lam-20k/step_045500/config.json",
+      "size": 1109,
+      "source": "https://modelscope.cn/models/Damo_XR_Lab/LAM-20K/resolve/master/config.json",
+      "sha256": "f05d2fffa9c5a617539f21dd2a77b6b5effc18a83e455c695935b81cf2a8b0db",
+      "published_sha256": "f05d2fffa9c5a617539f21dd2a77b6b5effc18a83e455c695935b81cf2a8b0db",
+      "etag": null
+    },
+    {
+      "path": "model_zoo/lam_models/releases/lam/lam-20k/step_045500/README.md",
+      "size": 2661,
+      "source": "https://modelscope.cn/models/Damo_XR_Lab/LAM-20K/resolve/master/README.md",
+      "sha256": "d2408f2efe8464d0fac7b0a2decf9b96e0e17c18d1e657ec6a87fbc69281d062",
+      "published_sha256": "d2408f2efe8464d0fac7b0a2decf9b96e0e17c18d1e657ec6a87fbc69281d062",
+      "etag": null
+    },
+    {
+      "path": "model_zoo/dinov2/dinov2_vitl14_reg4_pretrain.pth",
+      "size": 1217607321,
+      "source": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vitl14/dinov2_vitl14_reg4_pretrain.pth",
+      "sha256": "36e4deffbaef061a2576705b0c36f93621e2ae20bf6274694821b0b492551b51",
+      "published_sha256": null,
+      "etag": "b6cbe2bf3ce2f370d5a67bcd465144b0-146"
+    }
+  ],
+  "validation": {
+    "lam_checkpoint": {
+      "tensors": 835,
+      "sample_shapes": {
+        "encoder.fusion_head.output_conv.bias": [
+          1024
+        ],
+        "encoder.fusion_head.output_conv.weight": [
+          1024,
+          4096,
+          1,
+          1
+        ],
+        "encoder.fusion_head.projects.0.bias": [
+          1024
+        ],
+        "encoder.fusion_head.projects.0.weight": [
+          1024,
+          1024,
+          1,
+          1
+        ],
+        "encoder.fusion_head.projects.1.bias": [
+          1024
+        ]
+      }
+    },
+    "dinov2_checkpoint": {
+      "tensors": 344,
+      "multipart_etag": "b6cbe2bf3ce2f370d5a67bcd465144b0-146",
+      "zip_crc": "passed",
+      "weights_only_load": "passed"
+    },
+    "tracking_checkpoints": {
+      "model_zoo/flame_tracking_models/68_keypoints_model.pkl": {
+        "size": 245650943,
+        "zip_crc": "passed"
+      },
+      "model_zoo/flame_tracking_models/FaceBoxesV2.pth": {
+        "size": 4153573
+      },
+      "model_zoo/flame_tracking_models/matting/stylematte_synth.pt": {
+        "size": 140040541,
+        "zip_crc": "passed"
+      },
+      "model_zoo/flame_tracking_models/vgghead/lmks_2d.pt": {
+        "size": 39273976
+      },
+      "model_zoo/flame_tracking_models/vgghead/vgg_heads_l.trcd": {
+        "size": 417153502,
+        "zip_crc": "passed"
+      }
+    },
+    "required_files": [
+      "configs/vhap_tracking/base_tracking_config.yaml",
+      "model_zoo/human_parametric_models/flame_assets/flame/flame2023.pkl",
+      "model_zoo/human_parametric_models/flame_vhap/flame2023.pkl",
+      "model_zoo/human_parametric_models/flame_vhap/FLAME_masks.pkl",
+      "model_zoo/human_parametric_models/flame_vhap/head_template_mesh.obj",
+      "model_zoo/human_parametric_models/flame_vhap/landmark_embedding_with_eyes.npy",
+      "model_zoo/human_parametric_models/flame_vhap/tex_mean_painted.png",
+      "model_zoo/human_parametric_models/flame_vhap/uv_masks.npz",
+      "assets/sample_input/status.png"
+    ]
+  },
+  "full_single_image_reconstruction": "not_run"
+}

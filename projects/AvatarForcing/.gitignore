@@ -1,0 +1,8 @@
+results
+pretrained_dir/*.pth
+pretrained_dir/wav2vec2-base-960h
+__pycache__
+*.pth
+pretrained_dir/.download.lock
+pretrained_dir/*.part
+pretrained_dir/*.backup

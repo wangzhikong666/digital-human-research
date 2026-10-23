@@ -1,0 +1,17 @@
+# Python and CUDA build tools only; install PyTorch and project dependencies
+# after activation as documented in docs/realdenseface-environment.md.
+name: realdenseface
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools=80.9
+  - wheel
+  - ninja
+  - gxx_linux-64=13
+  - cuda-version=12.8
+  - cuda-nvcc=12.8
+  - cuda-cudart-dev
+  - cuda-libraries-dev

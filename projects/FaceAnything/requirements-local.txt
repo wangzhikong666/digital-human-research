@@ -1,0 +1,7 @@
+# README versions, plus dependencies imported by the bundled DA3 inference API.
+-r requirements.txt
+
+addict==2.4.0
+moviepy==1.0.3
+evo==1.38.1
+pycolmap==4.2.1
