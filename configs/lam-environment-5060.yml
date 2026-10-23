@@ -1,0 +1,17 @@
+name: lam
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools<81
+  - wheel
+  - ninja
+  - cmake
+  - ffmpeg
+  - gcc_linux-64=13
+  - gxx_linux-64=13
+  - cuda-nvcc=12.8
+  - cuda-libraries-dev=12.8
+  - cuda-version=12.8

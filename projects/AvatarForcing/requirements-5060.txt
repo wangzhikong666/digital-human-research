@@ -1,0 +1,13 @@
+# Install the CUDA 12.8 PyTorch packages separately; see SETUP_5060.md.
+-r requirements.txt
+
+# Newer OpenCV wheels require NumPy 2, while upstream pins NumPy 1.26.0.
+opencv-python==4.11.0.86
+opencv-python-headless==4.11.0.86
+
+# Imported by inference.py and preprocess_user_video.py but absent upstream.
+face-alignment==1.4.1
+
+# Used by the upstream checkpoint download script. The hf CLI needs >=0.34.
+gdown==5.2.0
+huggingface-hub>=0.34,<1.0

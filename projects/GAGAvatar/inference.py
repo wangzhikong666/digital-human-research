@@ -1,0 +1,276 @@
+#!/usr/bin/env python
+# Copyright (c) Xuangeng Chu (xg.chu@outlook.com)
+
+import os
+from fractions import Fraction
+from pathlib import Path
+
+import av
+import torch
+import argparse
+import numpy as np
+import torchvision
+from tqdm.rich import tqdm
+
+from gagavatar.assets import GAGAvatarAssets
+from gagavatar.data import DriverData
+from gagavatar.runtime import GAGAvatarRuntime, GAGAvatarRuntimeConfig
+from gagavatar.libs.GAGAvatar_track.engines import CoreEngine as TrackEngine
+
+
+def load_runtime(resume_path, device):
+    assets = GAGAvatarAssets(
+        root=Path('./assets'),
+        model_path=Path(resume_path),
+        tracked_path=None,
+        flame_model_path=Path('./assets/FLAME_with_eye.pt'),
+    )
+    return GAGAvatarRuntime(GAGAvatarRuntimeConfig(assets=assets, device=device))
+
+
+def move_to_device(value, device):
+    if torch.is_tensor(value):
+        return value.to(device)
+    if isinstance(value, dict):
+        return {key: move_to_device(item, device) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(move_to_device(item, device) for item in value)
+    return value
+
+def write_video(output_path, video_frames, fps=25):
+    # torchvision.io.write_video is incompatible with PyAV >= 13 (float
+    # frame rates and string pict_type assignments are rejected), so write
+    # through PyAV directly.
+    container = None
+    try:
+        for video_frame in video_frames:
+            frame_array = (video_frame.clamp(0, 1) * 255).to(torch.uint8).permute(1, 2, 0).contiguous().numpy()
+            if container is None:
+                height, width = frame_array.shape[:2]
+                container = av.open(output_path, mode='w')
+                stream = container.add_stream('h264', rate=Fraction(fps).limit_denominator(1000))
+                stream.width = width
+                stream.height = height
+                stream.pix_fmt = 'yuv420p'
+            frame = av.VideoFrame.from_ndarray(frame_array, format='rgb24')
+            for packet in stream.encode(frame):
+                container.mux(packet)
+        if container is None:
+            raise ValueError('No video frames to write')
+        for packet in stream.encode():
+            container.mux(packet)
+    finally:
+        if container is not None:
+            container.close()
+
+
+def inference(image_path, driver_path, resume_path, force_retrack=False, device='cuda',
+              expression_scale=1.0, pose_scale=1.0, fixed_camera=False,
+              lift_front_scale=1.0, lift_back_scale=1.0, ablate_branch='none'):
+    torch.manual_seed(42)
+    driver_path = driver_path[:-1] if driver_path.endswith('/') else driver_path
+    driver_name = os.path.basename(driver_path).split('.')[0]
+    # load model
+    print(f'Loading model...')
+    runtime = load_runtime(resume_path, device)
+    model = runtime.model
+    model.set_inference_controls(lift_front_scale=lift_front_scale, lift_back_scale=lift_back_scale,
+                                 ablate_branch=ablate_branch)
+    track_engine = TrackEngine(focal_length=12.0, device=device)
+    # build input data
+    feature_name = os.path.basename(image_path).split('.')[0]
+    feature_data = get_tracked_results(image_path, track_engine, force_retrack=force_retrack)
+    if feature_data is None:
+        print(f'Finish inference, no face in input: {image_path}.')
+        return
+    # build driver data
+    ### ------------ run on demo or tracked images/videos ---------- ###
+    if os.path.isdir(driver_path):
+        driver_name = os.path.basename(driver_path[:-1] if driver_path.endswith('/') else driver_path)
+        driver_dataset = DriverData(driver_path, feature_data, runtime.config.point_plane_size,
+                                    expression_scale=expression_scale, pose_scale=pose_scale,
+                                    fixed_camera=fixed_camera)
+        driver_dataloader = torch.utils.data.DataLoader(driver_dataset, batch_size=1, num_workers=2, shuffle=False)
+    else:
+        driver_name = os.path.basename(driver_path).split('.')[0]
+        driver_data = get_tracked_results(driver_path, track_engine, force_retrack=force_retrack)
+        if driver_data is None:
+            print(f'Finish inference, no face in driver: {image_path}.')
+            return
+        driver_dataset = DriverData({driver_name: driver_data}, feature_data, runtime.config.point_plane_size,
+                                    expression_scale=expression_scale, pose_scale=pose_scale,
+                                    fixed_camera=fixed_camera)
+        driver_dataloader = torch.utils.data.DataLoader(driver_dataset, batch_size=1, num_workers=2, shuffle=False)
+    ### --------- if you need to run on your images online ---------- ###
+    # driver_data = track_engine.track_image(your_images, your_image_names) # list of tensor, list of str
+    # driver_dataset = DriverData(driver_data, feature_data, runtime.config.point_plane_size)
+    # driver_dataloader = torch.utils.data.DataLoader(driver_dataset, batch_size=1, num_workers=2, shuffle=False)
+
+    # run inference process
+    _water_mark_size = (82, 256)
+    _water_mark = torchvision.io.read_image('demos/gagavatar_logo.png', mode=torchvision.io.ImageReadMode.RGB_ALPHA).float()/255.0
+    _water_mark = torchvision.transforms.functional.resize(_water_mark, _water_mark_size, antialias=True).to(device)
+    ### ----------- if you need to run multiview results ------------ ###
+    # view_angles = np.linspace(angle, -angle, frame_num)
+    # batch['t_transform'] = build_camera(view_angles[idx])
+
+    def render_frames():
+        for batch in tqdm(driver_dataloader):
+            batch = move_to_device(batch, runtime.device)
+            with torch.no_grad():
+                render_results = model.forward_expression(batch)
+                gt_rgb = render_results['t_image'].clamp(0, 1)
+                pred_sr_rgb = render_results['sr_gen_image'].clamp(0, 1)
+                pred_sr_rgb = add_water_mark(pred_sr_rgb, _water_mark)
+            if driver_dataset._is_video:
+                yield torch.cat([gt_rgb[0].cpu(), pred_sr_rgb[0].cpu()], dim=-1)
+            else:
+                yield torchvision.utils.make_grid([gt_rgb[0], pred_sr_rgb[0]], nrow=4, padding=0).cpu()
+
+    dump_dir = os.path.join('render_results', 'GAGAvatar')
+    os.makedirs(dump_dir, exist_ok=True)
+    expression_tag = str(expression_scale).removesuffix('.0')
+    pose_tag = f'_pose{str(pose_scale).removesuffix(".0")}' if pose_scale != 1.0 else ''
+    camera_tag = '_fixedcam' if fixed_camera else ''
+    lift_tag = '' if (lift_front_scale, lift_back_scale) == (1.0, 1.0) else (
+        f'_lf{str(lift_front_scale).removesuffix(".0")}_lb{str(lift_back_scale).removesuffix(".0")}'
+    )
+    ablate_tag = f'_abl{ablate_branch}' if ablate_branch != 'none' else ''
+    if driver_dataset._is_video:
+        dump_path = os.path.join(dump_dir, f'{driver_name}_{feature_name}_exp{expression_tag}{pose_tag}{camera_tag}{lift_tag}{ablate_tag}.mp4')
+        feature_image = feature_data['image'].cpu()
+        video_frames = (torch.cat([feature_image, frame], dim=-1) for frame in render_frames())
+        write_video(dump_path, video_frames, fps=25)
+    else:
+        dump_path = os.path.join(dump_dir, f'{driver_name}_{feature_name}_exp{expression_tag}{pose_tag}{camera_tag}{lift_tag}{ablate_tag}.jpg')
+        images = list(render_frames())
+        merged_images = torchvision.utils.make_grid(images, nrow=5, padding=0)
+        feature_images = torchvision.utils.make_grid([feature_data['image']]*(merged_images.shape[-2]//512), nrow=1, padding=0)
+        merged_images = torch.cat([feature_images, merged_images], dim=-1)
+        torchvision.utils.save_image(merged_images, dump_path)
+    print(f'Finish inference: {dump_path}.')
+
+
+def get_tracked_results(image_path, track_engine, force_retrack=False):
+    if not is_image(image_path):
+        print(f'Please input a image path, got {image_path}.')
+        return None
+    tracked_pt_path = 'render_results/tracked/tracked.pt'
+    if not os.path.exists(tracked_pt_path):
+        os.makedirs('render_results/tracked', exist_ok=True)
+        torch.save({}, tracked_pt_path)
+    tracked_data = torch.load(tracked_pt_path, weights_only=False)
+    image_base = os.path.basename(image_path)
+    if image_base in tracked_data and not force_retrack:
+        print(f'Load tracking result from cache: {tracked_pt_path}.')
+    else:
+        print(f'Tracking {image_path}...')
+        image = torchvision.io.read_image(image_path, mode=torchvision.io.ImageReadMode.RGB).float()
+        feature_data = track_engine.track_image([image], [image_path])
+        if feature_data is not None:
+            feature_data = feature_data[image_path]
+            torchvision.utils.save_image(
+                torch.tensor(feature_data['vis_image']), 'render_results/tracked/{}.jpg'.format(image_base.split('.')[0])
+            )
+        else:
+            print(f'No face detected in {image_path}.')
+            return None
+        tracked_data[image_base] = feature_data
+        # track all images in this folder
+        other_names = [i for i in os.listdir(os.path.dirname(image_path)) if is_image(i)]
+        other_paths = [os.path.join(os.path.dirname(image_path), i) for i in other_names]
+        if len(other_paths) <= 35:
+            print('Track on all images in this folder to save time.')
+            other_images = [torchvision.io.read_image(imp, mode=torchvision.io.ImageReadMode.RGB).float() for imp in other_paths]
+            try:
+                other_feature_data = track_engine.track_image(other_images, other_names)
+                for key in other_feature_data:
+                    torchvision.utils.save_image(
+                        torch.tensor(other_feature_data[key]['vis_image']), 'render_results/tracked/{}.jpg'.format(key.split('.')[0])
+                    )
+                tracked_data.update(other_feature_data)
+            except Exception as e:
+                print(f'Error: {e}.')
+        # save tracking result
+        torch.save(tracked_data, tracked_pt_path)
+    feature_data = tracked_data[image_base]
+    for key in list(feature_data.keys()):
+        if isinstance(feature_data[key], np.ndarray):
+            feature_data[key] = torch.tensor(feature_data[key])
+    return feature_data
+
+
+def is_image(image_path):
+    extension_name = image_path.split('.')[-1].lower()
+    return extension_name in ['jpg', 'png', 'jpeg']
+
+
+def add_water_mark(image, water_mark):
+    _water_mark_rgb = water_mark[None, :3]
+    _water_mark_alpha = water_mark[None, 3:4].expand(-1, 3, -1, -1) * 0.8
+    _mark_patch = image[..., -water_mark.shape[-2]:, -water_mark.shape[-1]:]
+    _mark_patch = _mark_patch * (1-_water_mark_alpha) + _water_mark_rgb * _water_mark_alpha
+    image[..., -water_mark.shape[-2]:, -water_mark.shape[-1]:] = _mark_patch
+    return image
+
+
+### ------- multi-view camera helper -------- ###
+def build_camera(angle, ori_transforms=None, device='cuda'):
+    from pytorch3d.renderer.cameras import look_at_view_transform
+    if ori_transforms is None:
+        distance = 9.3
+    else:
+        distance = ori_transforms[..., 3].square().sum(dim=-1).sqrt()[0].item() * 1.0
+        device = ori_transforms.device
+    print(f'Camera distance: {distance}, angle: {angle}.')
+    R, T = look_at_view_transform(distance, 5, angle, device=device) # D, E, A
+    rotate_trans = torch.cat([R, T[:, :, None]], dim=-1)
+    return rotate_trans
+
+
+### ------------ run speed test ------------- ###
+def speed_test():
+    driver_path = './demos/vfhq_driver'
+    resume_path = './assets/GAGAvatar.pt'
+    torch.manual_seed(42)
+    # load model
+    print(f'Loading model...')
+    runtime = load_runtime(resume_path, 'cuda')
+    model = runtime.model
+    # build driver data
+    driver_name = os.path.basename(driver_path[:-1] if driver_path.endswith('/') else driver_path)
+    driver_dataset = DriverData(driver_path, None, runtime.config.point_plane_size)
+    driver_dataloader = torch.utils.data.DataLoader(driver_dataset, batch_size=1, num_workers=2, shuffle=False)
+    # run inference process
+    for idx, batch in enumerate(tqdm(driver_dataloader)):
+        render_results = model.forward_expression(batch)
+        gt_rgb = render_results['t_image'].clamp(0, 1)
+        pred_sr_rgb = render_results['sr_gen_image'].clamp(0, 1)
+    print(f'Finish speed test.')
+    # torchvision.utils.save_image([gt_rgb[0], pred_sr_rgb[0]], 'speed_test.jpg')
+
+
+if __name__ == '__main__':
+    import warnings
+    from tqdm.std import TqdmExperimentalWarning
+    warnings.simplefilter("ignore", category=TqdmExperimentalWarning, lineno=0, append=False)
+    # build args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--image_path', '-i', required=True, type=str)
+    parser.add_argument('--driver_path', '-d', required=True, type=str)
+    parser.add_argument('--force_retrack', '-f', action='store_true')
+    parser.add_argument('--resume_path', '-r', default='./assets/GAGAvatar.pt', type=str)
+    parser.add_argument('--expression-scale', default=1.0, type=float)
+    parser.add_argument('--pose-scale', default=1.0, type=float)
+    parser.add_argument('--fixed-camera', action='store_true')
+    parser.add_argument('--lift-front-scale', default=1.0, type=float)
+    parser.add_argument('--lift-back-scale', default=1.0, type=float)
+    parser.add_argument('--ablate-branch', default='none',
+                        choices=['none', 'expression', 'lift_front', 'lift_back', 'dual_lifting'])
+    args = parser.parse_args()
+    # launch
+    torch.set_float32_matmul_precision('high')
+    inference(args.image_path, args.driver_path, args.resume_path, args.force_retrack,
+              expression_scale=args.expression_scale, pose_scale=args.pose_scale,
+              fixed_camera=args.fixed_camera, lift_front_scale=args.lift_front_scale,
+              lift_back_scale=args.lift_back_scale, ablate_branch=args.ablate_branch)

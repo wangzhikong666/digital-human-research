@@ -1,0 +1,60 @@
+{
+  "project": "RealDenseFace",
+  "repository_commit": "ebf0063835f520f07fdf5a813b1af9cdc0ae46b5",
+  "recorded_on": "2026-10-09",
+  "archive": {
+    "url": "https://drive.google.com/file/d/1eLlN_BCFMn0jSo0lNwBFqtI6igTh7Nc3/view?usp=sharing",
+    "filename": "realdenseface.zip",
+    "size_bytes": 1093003008,
+    "sha256": "5896ed4604ed26b2b95adb6ba004c61a78682c313d2f0dcebc919809afaa27ae"
+  },
+  "assets": [
+    {
+      "path": "weights/facebox/face_box.pth",
+      "size_bytes": 4176879,
+      "sha256": "3fde8561f059dd60d876021cbd2f67d955d5e02f24c25b297913a4115e433b4d",
+      "status": "installed",
+      "source": "release_archive"
+    },
+    {
+      "path": "weights/flame/flame_assets.npz",
+      "size_bytes": 379832,
+      "sha256": "922cb76f3afef0c2e9801a63991de269a98e6b67b1728232493f851589151dd3",
+      "status": "installed",
+      "source": "release_archive"
+    },
+    {
+      "path": "weights/realdenseface/vitb.pth",
+      "size_bytes": 904499225,
+      "sha256": "3b3bbd026c277aae561aed0047f43bbae2833c000779904f6dd73e97e321c604",
+      "status": "installed",
+      "source": "release_archive"
+    },
+    {
+      "path": "weights/realdenseface/vits.pth",
+      "size_bytes": 274435137,
+      "sha256": "9644fb9c7b7b8b5b6ca0d06fdebae418c154f1f4224a1ef5298777cc399ea15c",
+      "status": "installed",
+      "source": "release_archive"
+    }
+  ],
+  "flame_model": {
+    "path": "weights/flame/flame2023.pkl",
+    "source_url": "https://flame.is.tue.mpg.de/download.php",
+    "source_archive": "FLAME2023.zip",
+    "source_entry": "FLAME2023/flame2023.pkl",
+    "archive_sha256": "bd7b073c72cbd8eecbcdceee0922e4c22609e277b4bf8e6361170ebf3b2cac60",
+    "size_bytes": 53023716,
+    "sha256": "8fb1af0db1abb51053ead8fd1f2624a63d01c9602f4a4fb4ea23bd2c82017fa0",
+    "status": "installed"
+  },
+  "validation": {
+    "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "torch_compile": false,
+    "flame_assets": "passed: required arrays, shapes, index ranges and finite UVs",
+    "vits": "passed: strict state_dict loading and CUDA inference with 5023 vertices",
+    "vitb": "passed: strict state_dict loading and CUDA inference with 5023 vertices",
+    "facebox": "passed: state_dict loading and CUDA inference",
+    "flame_model": "passed: 5023 vertices, 300 shape dimensions, 100 expression dimensions, matching asset topology and CUDA canonical/posed forward"
+  }
+}

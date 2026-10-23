@@ -1,0 +1,172 @@
+{
+  "recorded_on": "2026-10-23",
+  "layout": "Full source snapshots with local setup files; original working directories retained. Weights, datasets, media and generated outputs excluded.",
+  "projects": [
+    {
+      "name": "GAGAvatar",
+      "path": "projects/GAGAvatar",
+      "upstream_repository": "https://github.com/xg-chu/GAGAvatar.git",
+      "source_commit": "7abb72be5f311e7fb130c7f2e04a2d11a31420ba",
+      "local_source_directory": "/home/wangzhikong666/projects/GAGAvatar",
+      "working_tree_changes": [
+        "M gagavatar/data/loader_track.py",
+        " M gagavatar/models/GAGAvatar/models.py",
+        " M inference.py"
+      ],
+      "source_file_count": 33,
+      "local_setup_files": [],
+      "excluded_files": [
+        {
+          "path": ".gitmodules",
+          "reason": "nested repository source imported directly"
+        },
+        {
+          "path": "demos/teaser.gif",
+          "reason": "model/data/media/build artifact excluded"
+        }
+      ],
+      "nested_repositories": [
+        {
+          "path": "gagavatar/libs/GAGAvatar_track",
+          "repository": "git@github.com:xg-chu/GAGAvatar_track.git",
+          "commit": "76fdabf901cff2552dd0b9b1c7b6b36257309b7d",
+          "source_file_count": 36,
+          "local_setup_files": [],
+          "excluded_files": [
+            {
+              "path": "demos/obama.mp4",
+              "reason": "model/data/media/build artifact excluded"
+            },
+            {
+              "path": "demos/track_obama.gif",
+              "reason": "model/data/media/build artifact excluded"
+            },
+            {
+              "path": "demos/vfhq_demo/data.mdb",
+              "reason": "model/data/media/build artifact excluded"
+            },
+            {
+              "path": "demos/vfhq_demo/lock.mdb",
+              "reason": "model/data/media/build artifact excluded"
+            }
+          ],
+          "nested_repositories": []
+        }
+      ]
+    },
+    {
+      "name": "RealDenseFace",
+      "path": "projects/RealDenseFace",
+      "upstream_repository": "https://github.com/LinzhouLi/RealDenseFace.git",
+      "source_commit": "ebf0063835f520f07fdf5a813b1af9cdc0ae46b5",
+      "local_source_directory": "/home/wangzhikong666/projects/RealDenseFace",
+      "working_tree_changes": [],
+      "source_file_count": 721,
+      "local_setup_files": [],
+      "excluded_files": [
+        {
+          "path": "assets/demo_video.mp4",
+          "reason": "model/data/media/build artifact excluded"
+        }
+      ],
+      "nested_repositories": []
+    },
+    {
+      "name": "LAM",
+      "path": "projects/LAM",
+      "upstream_repository": "https://github.com/aigc3d/LAM.git",
+      "source_commit": "1318ca7416d076ea95d9f65a9cdd35f72ab9fc8b",
+      "local_source_directory": "/home/wangzhikong666/projects/LAM",
+      "working_tree_changes": [],
+      "source_file_count": 214,
+      "local_setup_files": [],
+      "excluded_files": [
+        {
+          "path": "external/landmark_detection/FaceBoxesV2/utils/build/temp.linux-x86_64-cpython-310/nms/cpu_nms.o",
+          "reason": "cache, build product, weights or generated output"
+        }
+      ],
+      "nested_repositories": [],
+      "upstream_commit": "339573649dd93df4cba8093a964e85a80d1b61f3"
+    },
+    {
+      "name": "AvatarForcing",
+      "path": "projects/AvatarForcing",
+      "upstream_repository": "https://github.com/TaekyungKi/AvatarForcing.git",
+      "source_commit": "507e3046ad539c938e0412ac7a74cf6e3ba2a61c",
+      "local_source_directory": "/home/wangzhikong666/projects/AvatarForcing",
+      "working_tree_changes": [
+        "M .gitignore",
+        "?? SETUP_5060.md",
+        "?? check_environment.py",
+        "?? download_pretrained.py",
+        "?? environment-5060.yml",
+        "?? pretrained_dir/weights_manifest.json",
+        "?? requirements-5060.lock.txt",
+        "?? requirements-5060.txt"
+      ],
+      "source_file_count": 25,
+      "local_setup_files": [
+        "SETUP_5060.md",
+        "check_environment.py",
+        "download_pretrained.py",
+        "environment-5060.yml",
+        "requirements-5060.lock.txt",
+        "requirements-5060.txt"
+      ],
+      "excluded_files": [
+        {
+          "path": "assets/rumi-seed25-88942ee804.mp4",
+          "reason": "model/data/media/build artifact excluded"
+        },
+        {
+          "path": "assets/rumi-user-seed25-88942ee804.mp4",
+          "reason": "model/data/media/build artifact excluded"
+        },
+        {
+          "path": "data/avatar.wav",
+          "reason": "model/data/media/build artifact excluded"
+        },
+        {
+          "path": "data/user.mp4",
+          "reason": "model/data/media/build artifact excluded"
+        }
+      ],
+      "nested_repositories": []
+    },
+    {
+      "name": "FaceAnything",
+      "path": "projects/FaceAnything",
+      "upstream_repository": "https://github.com/kocasariumut/FaceAnything.git",
+      "source_commit": "2fb31d11cfa0d750e53c2acaf2c2fda469704ee7",
+      "local_source_directory": "/home/wangzhikong666/projects/FaceAnything",
+      "working_tree_changes": [
+        "M .gitignore",
+        "?? SETUP_LOCAL.md",
+        "?? requirements-local.lock.txt",
+        "?? requirements-local.txt",
+        "?? scripts/download_checkpoint.py",
+        "?? scripts/download_checkpoint.sh"
+      ],
+      "source_file_count": 102,
+      "local_setup_files": [
+        "SETUP_LOCAL.md",
+        "requirements-local.lock.txt",
+        "requirements-local.txt",
+        "scripts/download_checkpoint.py",
+        "scripts/download_checkpoint.sh"
+      ],
+      "excluded_files": [
+        {
+          "path": "assets/teaser.gif",
+          "reason": "model/data/media/build artifact excluded"
+        },
+        {
+          "path": "checkpoints/README.md",
+          "reason": "cache, build product, weights or generated output"
+        }
+      ],
+      "nested_repositories": []
+    }
+  ]
+}

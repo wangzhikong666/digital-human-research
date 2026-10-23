@@ -1,0 +1,38 @@
+# Python 3.10; install PyTorch 2.9.1+cu128 and xformers 0.0.33.post2 first.
+# CUDA extensions are installed separately; see SETUP_5060.md.
+pymcubes==0.1.6
+omegaconf==2.3.0
+moviepy==1.0.3
+pandas==2.2.3
+transformers==4.41.2
+# Compatible with TensorFlow 2.12 and the legacy FLAME/chumpy assets.
+numpy==1.23.5
+scipy==1.10.1
+trimesh==4.4.9
+opencv-python-headless==4.11.0.86
+tensorflow==2.12.0
+face-detection-tflite==0.6.0
+scikit-image==0.20.0
+jax==0.4.30
+jaxlib==0.4.30
+gradio==3.44.3
+huggingface-hub==0.23.2
+# Keep the Hugging Face stack compatible with this repository's APIs.
+accelerate==0.33.0
+diffusers==0.30.3
+Cython==0.29.37
+tyro==0.8.14
+einops==0.8.0
+plyfile==1.0.3
+jaxtyping==0.2.34
+typeguard==2.13.3
+loguru==0.7.2
+matplotlib==3.7.5
+Pillow==10.4.0
+lpips==0.1.4
+imageio-ffmpeg==0.5.1
+rich==13.9.4
+# Gradio 3 predates the current FastAPI / Pydantic APIs.
+fastapi==0.103.2
+pydantic==1.10.19
+httpx==0.24.1
